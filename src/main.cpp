@@ -1,26 +1,40 @@
 #include <Arduino.h>
 #include "readSonar.h"
+#include <Servo.h>
 #include <ros.h>
 #include <sensor_msgs/Range.h>
+#include <ros/time.h>
+
+#define MAX_ANGLE 60
 
 double dist;
+int pos;
 const int trigPin = 9;
 const int echoPin = 4;
+const int servoPin = 10;
 
-ros::NodeHandle nh;
-sensor_msgs::Range range_msg;
 sonar HC_SR04;
-ros::Publisher pub_range("/ultrasound", &range_msg);
+Servo rotServo;
 
 void setup() {
-  // put your setup code here, to run once:
+  // setup the ultrasonic sensor
   HC_SR04.sonarSetup(trigPin, echoPin);
-  nh.initNode();
-  nh.advertise(pub_range);
-  
+  // setup the servo
+  rotServo.attach(servoPin);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  dist = HC_SR04.read(trigPin, echoPin);
+  for(pos = 0; pos<=MAX_ANGLE; pos++){
+    dist = HC_SR04.read(trigPin, echoPin);
+    rotServo.write(pos);
+    Serial.print("\t Servo Position [deg]: ");
+    Serial.print(pos);
+  }
+  for(pos = MAX_ANGLE; pos >=0; pos--){
+    dist = HC_SR04.read(trigPin, echoPin);
+    rotServo.write(pos);
+    Serial.print("\t Servo Position [deg]: ");
+    Serial.print(pos);
+  }
 }
