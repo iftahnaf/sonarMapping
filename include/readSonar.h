@@ -9,7 +9,7 @@ class sonar
 
     public:
         static void sonarSetup(const int trigPin, const int echoPin);
-        int read(const int trigPin, const int echoPin);
+        double read(const int trigPin, const int echoPin);
         static void hazard(int distance, const int ledPin, const int minDist);
 };
 

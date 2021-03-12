@@ -9,7 +9,7 @@ void sonar::sonarSetup(const int trigPin, const int echoPin){
   Serial.begin(9600);
 }
 
-int sonar::read(const int trigPin, const int echoPin){
+double sonar::read(const int trigPin, const int echoPin){
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
