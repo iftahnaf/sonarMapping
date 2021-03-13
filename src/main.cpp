@@ -1,40 +1,77 @@
+/* 
+ * Arduino Learning Board Project - HC-SR04 Ultrasonic Sensor Example
+ *
+ * Please visit http://www.ArduinoLearningBoard.com for more information
+ *
+ * Last modified August 2016 by Jeff Shapiro <Jeff@ArduinoLearningBoard.com>
+ */
+
+/*
+VCC  -> 5V
+Trig -> D2
+Echo -> D4
+GND  -> GND
+*/
 #include <Arduino.h>
-#include "readSonar.h"
-#include <Servo.h>
 #include <ros.h>
-#include <sensor_msgs/Range.h>
 #include <ros/time.h>
+#include <sensor_msgs/Range.h>
+#include "readSonar.h"
+#define trigPin 2
+#define echoPin 4
 
-#define MAX_ANGLE 60
+ros::NodeHandle  nh;
 
-double dist;
-int pos;
-const int trigPin = 9;
-const int echoPin = 4;
-const int servoPin = 10;
+sensor_msgs::Range range_msg;
+ros::Publisher pub_range( "/ultrasound", &range_msg);
+sonar ultrasonic;
 
-sonar HC_SR04;
-Servo rotServo;
 
-void setup() {
-  // setup the ultrasonic sensor
-  HC_SR04.sonarSetup(trigPin, echoPin);
-  // setup the servo
-  rotServo.attach(servoPin);
+long duration;     // Duration used to calculate distance
+float distance;
+
+char frameid[] = "/ultrasound";
+
+void setup()
+{
+  nh.initNode();
+  nh.advertise(pub_range);
+  
+  range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+  range_msg.header.frame_id =  frameid;
+  range_msg.field_of_view = 0.1;  // fake
+  range_msg.min_range = 0.0;
+  range_msg.max_range = 6.47;
+  
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  for(pos = 0; pos<=MAX_ANGLE; pos++){
-    dist = HC_SR04.read(trigPin, echoPin);
-    rotServo.write(pos);
-    Serial.print("\t Servo Position [deg]: ");
-    Serial.print(pos);
+long range_time;
+
+void loop()
+{
+  //publish the adc value every 50 milliseconds
+  //since it takes that long for the sensor to stablize
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  // Call pulseIn function to wait for High pulse
+  // result will be time in microseconds until pulse is detected
+  duration = pulseIn(echoPin, HIGH);
+
+  if (duration < 100000)
+  {
+    distance = ultrasonic.microSecondsToCentimeters(duration);
+    range_msg.range = distance;
+    range_msg.header.stamp = nh.now();
+    pub_range.publish(&range_msg);
   }
-  for(pos = MAX_ANGLE; pos >=0; pos--){
-    dist = HC_SR04.read(trigPin, echoPin);
-    rotServo.write(pos);
-    Serial.print("\t Servo Position [deg]: ");
-    Serial.print(pos);
-  }
+  delay(100); 
+
+  nh.spinOnce();
 }

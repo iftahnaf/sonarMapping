@@ -9,7 +9,7 @@ void sonar::sonarSetup(const int trigPin, const int echoPin){
   Serial.begin(9600);
 }
 
-double sonar::read(const int trigPin, const int echoPin){
+float sonar::read(const int trigPin, const int echoPin){
     digitalWrite(trigPin, LOW);
     delayMicroseconds(2);
     digitalWrite(trigPin, HIGH);
@@ -32,4 +32,13 @@ void sonar::hazard(int distance, const int ledPin, const int minDist){
     else{
         digitalWrite(ledPin, LOW);
     }
+}
+
+float sonar::microSecondsToCentimeters(long microseconds)
+{
+  // Sound travels at 1125 feet per second
+  // or 29.386 microseconds per centimeter
+  // This gives the distance travelled by the ping, outbound
+  // and return, so we divide by 2 to get the distance of the obstacle.
+  return microseconds / 29.387 / 2.0;
 }
