@@ -29,11 +29,9 @@ sonar ultrasonic;
 std_msgs::String str_msg;
 ros::Publisher chatter("/test", &str_msg);
 
-
 long duration;
 float distance;
 char hello[13] = "hello world!";
-
 char frameid[] = "/ultrasound";
 
 void setup()
@@ -44,7 +42,7 @@ void setup()
   
   range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
   range_msg.header.frame_id =  frameid;
-  range_msg.field_of_view = 0.1;  // fake
+  range_msg.field_of_view = 60.0;  // fake
   range_msg.min_range = 0.0;
   range_msg.max_range = 1200.00;
   
