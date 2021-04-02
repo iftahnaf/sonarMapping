@@ -1,5 +1,5 @@
-#ifndef readSonar
-#define readSonar
+#ifndef READSONAR
+#define READSONAR
 
 class sonar
 {

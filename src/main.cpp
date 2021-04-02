@@ -1,16 +1,11 @@
-/* 
- * Arduino Learning Board Project - HC-SR04 Ultrasonic Sensor Example
- *
- * Please visit http://www.ArduinoLearningBoard.com for more information
- *
- * Last modified August 2016 by Jeff Shapiro <Jeff@ArduinoLearningBoard.com>
- */
-
 /*
+Ultrasonic:
 VCC  -> 5V
 Trig -> D2
 Echo -> D4
 GND  -> GND
+Servo:
+PWM -> D9
 */
 #include <Arduino.h>
 #include <ros.h>
@@ -18,8 +13,11 @@ GND  -> GND
 #include <sensor_msgs/Range.h>
 #include "readSonar.h"
 #include <std_msgs/String.h>
+#include <Servo.h>
+
 #define trigPin 2
 #define echoPin 4
+#define servoPin 9
 
 ros::NodeHandle  nh;
 
@@ -28,11 +26,13 @@ ros::Publisher pub_range( "/ultrasound", &range_msg);
 sonar ultrasonic;
 std_msgs::String str_msg;
 ros::Publisher chatter("/test", &str_msg);
+Servo myservo;
 
 long duration;
 float distance;
 char hello[13] = "hello world!";
 char frameid[] = "/ultrasound";
+int pos;
 
 void setup()
 {
@@ -45,9 +45,11 @@ void setup()
   range_msg.field_of_view = 60.0;  // fake
   range_msg.min_range = 0.0;
   range_msg.max_range = 1200.00;
-  
+    
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
+
+  myservo.attach(servoPin);
 }
 
 void loop()
