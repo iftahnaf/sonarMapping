@@ -35,7 +35,7 @@ int flag = 0;
 int minAngle = 60;
 int maxAngle = 135;
 
-void controlServo(int &pos, int &flag, int minAngle, int maxAngle)
+void controlServo(int &pos, int &flag, int minAngle, int maxAngle, Servo &myservo, std_msgs::UInt16 &servoPos, ros::Publisher &pub_pos)
 {
   if ((pos <= 135) && flag == 0)
   {
@@ -51,20 +51,29 @@ void controlServo(int &pos, int &flag, int minAngle, int maxAngle)
     flag = 0;
     pos = 60;
   }
+  myservo.write(pos);
+  servoPos.data = pos;
+  pub_pos.publish(&servoPos);
 }
 
-void publishMeasuredDistance()
+void publishMeasuredDistance(sensor_msgs::Range &range_msg, ros::Publisher &pub_range)
 {
   long duration;
   float distance;
   duration = ultrasonic.timeTravel(echoPin, trigPin);
-  if (duration < 100000)
-  {
     distance = ultrasonic.microSecondsToCentimeters(duration);
     range_msg.range = distance;
     range_msg.header.stamp = nh.now();
     pub_range.publish(&range_msg);
-  }
+}
+
+void setupRangeMessage(sensor_msgs::Range &range_msg)
+{
+  range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
+  range_msg.header.frame_id = frameid;
+  range_msg.field_of_view = 75.0;
+  range_msg.min_range = 0.0;
+  range_msg.max_range = 1200.00;
 }
 
 void setup()
@@ -73,11 +82,7 @@ void setup()
   nh.advertise(pub_range);
   nh.advertise(pub_pos);
 
-  range_msg.radiation_type = sensor_msgs::Range::ULTRASOUND;
-  range_msg.header.frame_id = frameid;
-  range_msg.field_of_view = 60.0; // fake
-  range_msg.min_range = 0.0;
-  range_msg.max_range = 1200.00;
+  setupRangeMessage(range_msg);
 
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
@@ -89,11 +94,8 @@ void setup()
 
 void loop()
 {
-  controlServo(pos, flag, minAngle, maxAngle);
-  myservo.write(pos);
-  servoPos.data = pos;
-  pub_pos.publish(&servoPos);
-  publishMeasuredDistance();
+  controlServo(pos, flag, minAngle, maxAngle, myservo, servoPos, pub_pos);
+  publishMeasuredDistance(range_msg, pub_range);
   delay(10);
   nh.spinOnce();
 }
