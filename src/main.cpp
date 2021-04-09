@@ -18,7 +18,6 @@ PWM -> D9
 #define trigPin 2
 #define echoPin 4
 #define servoPin 9
-#define servoPower 13
 
 ros::NodeHandle nh;
 
@@ -32,12 +31,12 @@ Servo myservo;
 char frameid[] = "/ultrasound";
 int pos = 60;
 int flag = 0;
-int minAngle = 60;
+int minAngle = 35;
 int maxAngle = 135;
 
 void controlServo(int &pos, int &flag, int minAngle, int maxAngle, Servo &myservo, std_msgs::UInt16 &servoPos, ros::Publisher &pub_pos)
 {
-  if ((pos <= 135) && flag == 0)
+  if ((pos <= maxAngle) && flag == 0)
   {
     pos = pos + 2;
   }
@@ -46,10 +45,10 @@ void controlServo(int &pos, int &flag, int minAngle, int maxAngle, Servo &myserv
     flag = 1;
     pos = pos - 2;
   }
-  if (pos < 60)
+  if (pos < minAngle)
   {
     flag = 0;
-    pos = 60;
+    pos = minAngle;
   }
   myservo.write(pos);
   servoPos.data = pos;
@@ -61,10 +60,10 @@ void publishMeasuredDistance(sensor_msgs::Range &range_msg, ros::Publisher &pub_
   long duration;
   float distance;
   duration = ultrasonic.timeTravel(echoPin, trigPin);
-    distance = ultrasonic.microSecondsToCentimeters(duration);
-    range_msg.range = distance;
-    range_msg.header.stamp = nh.now();
-    pub_range.publish(&range_msg);
+  distance = ultrasonic.microSecondsToCentimeters(duration);
+  range_msg.range = distance;
+  range_msg.header.stamp = nh.now();
+  pub_range.publish(&range_msg);
 }
 
 void setupRangeMessage(sensor_msgs::Range &range_msg)
@@ -86,8 +85,6 @@ void setup()
 
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-  pinMode(servoPower, OUTPUT);
-  digitalWrite(servoPower, HIGH);
 
   myservo.attach(servoPin);
 }
@@ -96,7 +93,7 @@ void loop()
 {
   controlServo(pos, flag, minAngle, maxAngle, myservo, servoPos, pub_pos);
   publishMeasuredDistance(range_msg, pub_range);
-  delay(10);
+  delay(2);
   nh.spinOnce();
 }
 
